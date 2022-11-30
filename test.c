@@ -70,7 +70,7 @@ void sch_initialzer()
     //assigning using index
     int assignmenting(int f,int pass)
     {
-
+	
         if(ind==ELEVATORS)
         {
             ind=0;
@@ -83,43 +83,64 @@ void sch_initialzer()
 
     }
 
-    //removing the request of tje
-    void remove_it(int pass)
-    {
-        elevat[which_ele[pass]].requesting[pass]=-1;
-
-    }
-
-    int tempfunc(int elevtor_on)
-    {
-        ele *temp = &elevat[elevtor_on];
-        int i=0;
-        while(temp->requesting[temp->next_one]==-1)
-        {
-            temp->next_one=temp->next_one+1;
-            if(temp->next_one>=PASSENGERS){temp->next_one=0;}
-            if(i+1>PASSENGERS){return 0;}
-
-
-
-        }
-        return temp->requesting[temp->next_one++];
-
-    }
-    
     //getting the next request from the passengers
     int get_next_req(int elevator_on)
     {
         ele *temp = &elevat[elevator_on];
         if(temp->next_one>=PASSENGERS){temp->next_one=0;}
-        tempfunc(elevator_on);
+        
+        
+        ele *tem = &elevat[elevator_on];
+        int i=0;
+        while(tem->requesting[tem->next_one]==-1)
+        {
+            tem->next_one=tem->next_one+1;
+            if(tem->next_one>=PASSENGERS){tem->next_one=0;}
+            if(i+1>PASSENGERS){return 0;}
+
+
+
+        }
+       
+        return temp->requesting[temp->next_one++];
+
 
     }
 
     void scheduler_init()
     {
-        sch_initialzer();
-        int i=0;
+       
+        int i =0;
+
+    //initializing the structure of the elevators
+    while(i<=ELEVATORS-1)
+    {
+        elevat[i].this_floor=0;		
+        elevat[i].direction=-1;
+        elevat[i].pas_inside = -1;
+        elevat[i].c = n;
+        elevat[i].c2 = n1;
+        elevat[i].type = elevator_came;
+        elevat[i].next_one = 0;
+        elevat[i].num_req = 0;
+        elevat[i].amount=0;
+        pthread_mutex_init(&elevat[i].l,0);
+        pthread_cond_init(&elevat[i].pentered, 0);
+        pthread_cond_init(&elevat[i].pexit, 0);
+        int k=0;
+        while(k<=PASSENGERS-1)
+        {
+            elevat[i].floor_to_go[i] =-1;
+            elevat[i].requesting[k] = -1;
+
+            k=k+1;
+        }
+        i=i+1;
+
+    }
+        
+        //passengers
+        i=0;
         while(i<PASSENGERS)
         {
 
@@ -151,8 +172,17 @@ void sch_initialzer()
     //each passenger will go as the elevator list
     void passenger_request(int passenger, int from_floor, int to_floor, void (*enter)(int, int), void(*exit)(int, int))
     {
-
-        int temp=assignmenting(from_floor,passenger);
+	
+        if(ind==ELEVATORS)
+        {
+            ind=0;
+        }
+        which_ele[passenger]=ind++;
+        elevat[which_ele[passenger]].requesting[passenger]=from_floor; //putting which floor 
+        int temp= which_ele[passenger];
+        //then returns which elevator the passenger is on
+	
+	
         elevat[temp].num_req=elevat[temp].num_req+1;
         
         //if the passenger is at the floor it should waut for the passenger to get in
@@ -198,7 +228,8 @@ void sch_initialzer()
             tem->amount=tem->amount-1;
             tem->num_req=tem->num_req-1;
             tem->pas_inside=-1;
-            remove_it(passenger);
+            //remove_it(passenger);
+            elevat[which_ele[passenger]].requesting[passenger]=-1;
             inside_it=-1;
             }
         
@@ -287,10 +318,10 @@ void sch_initialzer()
             if(temp->direction != 1 && temp->direction !=-1)
             {
                temp->direction = direc;
-            if (at_floor == 0)
-                temp->direction = 1;
-            else if (at_floor >= FLOORS-1)
-                temp->direction = -1;
+		    if (at_floor == 0)
+		        {temp->direction = 1;}
+		    else if (at_floor >= FLOORS-1)
+		        {temp->direction = -1;}
         }
         temp->type=elevator_came;
 
