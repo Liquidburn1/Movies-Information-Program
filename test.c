@@ -120,13 +120,19 @@ void scheduler_init()
 
     }
 
-int passenger_is_waiting_at_floor(int elevator, int floor)  {
-    for(int i = 0; i < PASSENGERS; i++) {
-        if (elevat[elevator].requesting[i] == floor)
-            return 1;
+int checker(int floor,int el)
+    {
+        int i =0;
+        while(i<PASSENGERS)
+        {
+            if(elevat[el].requesting[i]==floor)
+            {
+                return 1;
+            }
+            i=i+1;
+        }
+        return -1;
     }
-    return 0;
-}
 
 
    //each passenger will go as the elevator list
