@@ -67,47 +67,56 @@ void sch_initialzer()
 
     }
 }
-    int help_add(int from, int passenger){   
-    which_ele[passenger] = ind++;
-    elevat[which_ele[passenger]].requesting[passenger] = from;
-    return which_ele[passenger];
-}
-    
-int add_start(int from, int passenger) {
-    if (ind == ELEVATORS) ind = 0;
-    help_add(from, passenger);
-}
+    //assigning using index
+    int assignmenting(int f,int pass)
+    {
 
-
-//after asignmenting in my code
-
-
-
-int help_next(int elev){
-    ele *_e = &elevat[elev];
-    int n = 0;
-    while (_e->requesting[_e->next_one] == -1) {
-            _e->next_one++;
-            if (_e->next_one >= PASSENGERS)
-                _e->next_one = 0;
-            if (++n > PASSENGERS)
-                return 0;
+        if(ind==ELEVATORS)
+        {
+            ind=0;
         }
-        return _e->requesting[_e->next_one++];
-}
+        which_ele[pass]=ind++;
+        elevat[which_ele[pass]].requesting[pass]=f; //putting which floor 
+        return which_ele[pass];
+        //then returns which elevator the passenger is on
 
-int get_next_request(int elev) {
-    ele *_e = &elevat[elev];
-    if (_e->next_one >= PASSENGERS)
-        _e->next_one = 0;
-    help_next(elev);
-}
-void remove_request(int passenger) {
-    elevat[which_ele[passenger]].requesting[passenger] = -1;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////
 
-void scheduler_init()
+    }
+
+    //removing the request of tje
+    void remove_it(int pass)
+    {
+        elevat[which_ele[pass]].requesting[pass]=-1;
+
+    }
+
+    int tempfunc(int elevtor_on)
+    {
+        ele *temp = &elevat[elevtor_on];
+        int i=0;
+        while(temp->requesting[temp->next_one]==-1)
+        {
+            temp->next_one=temp->next_one+1;
+            if(temp->next_one>=PASSENGERS){temp->next_one=0;}
+            if(i+1>PASSENGERS){return 0;}
+
+
+
+        }
+        return temp->requesting[temp->next_one++];
+
+    }
+    
+    //getting the next request from the passengers
+    int get_next_req(int elevator_on)
+    {
+        ele *temp = &elevat[elevator_on];
+        if(temp->next_one>=PASSENGERS){temp->next_one=0;}
+        tempfunc(elevator_on);
+
+    }
+
+    void scheduler_init()
     {
         sch_initialzer();
         int i=0;
@@ -120,7 +129,9 @@ void scheduler_init()
 
     }
 
-int checker(int floor,int el)
+
+    //this function will check if there is a passenger on the floor or not returns -1 or 1
+    int checker(int floor,int el)
     {
         int i =0;
         while(i<PASSENGERS)
@@ -135,16 +146,18 @@ int checker(int floor,int el)
     }
 
 
-   //each passenger will go as the elevator list
+
+
+    //each passenger will go as the elevator list
     void passenger_request(int passenger, int from_floor, int to_floor, void (*enter)(int, int), void(*exit)(int, int))
     {
 
-        int temp=add_start(from_floor,passenger);
+        int temp=assignmenting(from_floor,passenger);
         elevat[temp].num_req=elevat[temp].num_req+1;
         
         //if the passenger is at the floor it should waut for the passenger to get in
         int idle=1;
-        
+
         while(idle==1)
         {
             pthread_mutex_lock(&elevat[temp].l);
@@ -185,7 +198,7 @@ int checker(int floor,int el)
             tem->amount=tem->amount-1;
             tem->num_req=tem->num_req-1;
             tem->pas_inside=-1;
-            remove_request(passenger);
+            remove_it(passenger);
             inside_it=-1;
             }
         
@@ -216,7 +229,7 @@ int checker(int floor,int el)
             temp->c = n;
             
             //if passenger is at the floor
-            while (passenger_is_waiting_at_floor(elevator, at_floor)==1 && temp->c == n && temp->num_req > 0)
+            while (checker(at_floor, elevator)==1 && temp->c == n && temp->num_req > 0)
                 pthread_cond_wait(&temp->pentered, &temp->l);
         }
 
@@ -262,7 +275,7 @@ int checker(int floor,int el)
 
             else if(temp->num_req>0)
             {
-                int to_floor = get_next_request(elevator);
+                int to_floor = get_next_req(elevator);
                 temp->direction=to_floor-at_floor;
 
             }
@@ -290,7 +303,5 @@ int checker(int floor,int el)
     } 
 
 
-
     
-
 
