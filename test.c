@@ -1,7 +1,8 @@
-#include "elevator.h"
-#include <stdio.h>
-#include <pthread.h>
-#include <time.h>
+#include"elevator.h"
+#include<unistd.h>
+#include<stdlib.h>
+#include<stdio.h>
+#include<pthread.h>
 
 //struct
 
@@ -35,55 +36,9 @@ int ind=0; //index
 ele elevat[ELEVATORS]; //this will crreate the array of struct 
 
 
-// Putting the elevators into the array
-void sch_initialzer()
-{
-    int i =0;
 
-    //initializing the structure of the elevators
-    while(i<=ELEVATORS-1)
-    {
-        elevat[i].this_floor=0;		
-        elevat[i].direction=-1;
-        elevat[i].pas_inside = -1;
-        elevat[i].c = n;
-        elevat[i].c2 = n1;
-        elevat[i].type = elevator_came;
-        elevat[i].next_one = 0;
-        elevat[i].num_req = 0;
-        elevat[i].amount=0;
-        pthread_mutex_init(&elevat[i].l,0);
-        pthread_cond_init(&elevat[i].pentered, 0);
-        pthread_cond_init(&elevat[i].pexit, 0);
-        int k=0;
-        while(k<=PASSENGERS-1)
-        {
-            elevat[i].floor_to_go[i] =-1;
-            elevat[i].requesting[k] = -1;
-
-            k=k+1;
-        }
-        i=i+1;
-
-    }
-}
-    //assigning using index
-    int assignmenting(int f,int pass)
-    {
-	
-        if(ind==ELEVATORS)
-        {
-            ind=0;
-        }
-        which_ele[pass]=ind++;
-        elevat[which_ele[pass]].requesting[pass]=f; //putting which floor 
-        return which_ele[pass];
-        //then returns which elevator the passenger is on
-
-
-    }
-
-    //getting the next request from the passengers
+    
+//getting the next request from the passengers
     int get_next_req(int elevator_on)
     {
         ele *temp = &elevat[elevator_on];
