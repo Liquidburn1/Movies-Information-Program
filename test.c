@@ -205,93 +205,62 @@ void sch_initialzer()
 
     void elevator_ready(int elevator, int at_floor, void(*move_direction)(int, int), void(*door_open)(int), void(*door_close)(int))
     {
-        if(elevat[elevator].num_req==0)
-        {
-            return;
-        }
-
-        ele *temp = &elevat[elevator];
-        pthread_mutex_lock(&temp->l);
-        
-        //checks for the passenger and weather the pasenger is in or not
-        if(temp->type==ele_open)
-        {
-
-            if (temp->amount == 0 && temp->num_req > 0) {
-            temp->c = n;
+        if(e[elevator].num_requests==0) return;
+    ELEV *el = &e[elevator];
+    pthread_mutex_l(&el->l);
+    if(el->type == elevator_came) {
+        door_open(elevator);
+        el->type=ele_open;
+    }
+    else if(el->type == ele_open) {
+        if (el->amount == 0 && el->num_requests > 0) {
+            el->c = no;
             
-            //if passenger is at the floor
-            while (checker(elevator, at_floor)==1 && temp->c == n && temp->num_req > 0)
-                pthread_cond_wait(&temp->pentered, &temp->l);
+            while (el->c == no && el->num_requests > 0 && passenger_is_waiting_at_floor(elevator, at_floor))
+                pthread_cond_wait(&el->pentered, &el->l);
+        } else if (el->pas_inside != -1 && el->amount_inside[el->pas_inside] == at_floor) {
+            el->c2 = no2;
+            while (el->c2 == no2)
+                pthread_cond_wait(&el->pexit, &el->l);
         }
-
-        //checking if there is a passenger inside we are using -1 since pas inside holds the passenger num
-            else if(temp->floor_to_go[temp->pas_inside]==at_floor && temp->pas_inside!=-1) 
-            {
-                temp->c2=n1;
-                while(temp->c2==n1)
-                {
-                    pthread_cond_wait(&temp->pexit,&temp->l);
-
-                }
-                
-
-            }
-            temp->type=ele_close;
-            door_close(elevator);
-
-        }
-        //open the door if elevator is there
-        else if(temp->type==elevator_came)
-        {
-            temp->type=ele_open;
-            door_open(elevator);
-        }
-        
-        else
-        {
-            int direc = temp->direction;
+        door_close(elevator);
+        el->type=ele_close;
+    }
+    //BASE CASES FOR ELEVATOR LEVEL CHECK
+			//if elevator the very bottom of the building
+			//----> manupulate the direction
+    else {
+        int old_direction = el->direction;
+        if (el->amount != 0) {
+            int to_floor = el->amount_inside[el->pas_inside];
+            el->direction = to_floor-at_floor;
+        } 
+        else if (el->num_requests > 0) {
+            int to_floor = get_next_request(elevator);
             
-            if(at_floor<1 || FLOORS-1<=at_floor)
-            {
-                temp->direction=temp->direction * -1;
-            }
-
-            if(temp->amount!=0)
-            {
-                int to_floor=temp->floor_to_go[temp->pas_inside];
-                temp->direction=to_floor-at_floor;
-                
-
-            }
-
-            else if(temp->num_req>0)
-            {
-                int to_floor = get_next_req(elevator);
-                temp->direction=to_floor-at_floor;
-
-            }
-
-
-            if(at_floor+temp->direction>-1 && at_floor+temp->direction<FLOORS)
-            {move_direction(elevator,temp->direction);}
-            temp->this_floor=at_floor+temp->direction;
-            if(temp->direction != 1 && temp->direction !=-1)
-            {
-               temp->direction = direc;
+            el->direction = to_floor-at_floor;
+        }
+        else if (at_floor<=0 || at_floor>=FLOORS-1) {
+            el->direction *=- 1;
+        }
+        //if the elevator has to down up i.e if our next pick up is on the floor below us 
+			//&& if we are moving down with an empty elevator
+		   //|| the pickup is in the range of all the possible floor we can go to
+			// Decrement  the direction of elevator a floor above
+        if (at_floor + el->direction < FLOORS && at_floor+ el->direction > -1)
+            move_direction(elevator,el->direction);
+        el->from_floor=at_floor+el->direction;
+        if (el->direction != 1 && el->direction != -1) {
+            el->direction = old_direction;
             if (at_floor == 0)
-                temp->direction = 1;
+                el->direction = 1;
             else if (at_floor >= FLOORS-1)
-                temp->direction = -1;
+                el->direction = -1;
         }
-        temp->type=elevator_came;
-
-
-
-
-         
-        }
-        pthread_mutex_unlock(&temp->l);
+        el->type=elevator_came;
+        
+    }
+    pthread_mutex_unl(&el->l);
     } 
 
 
