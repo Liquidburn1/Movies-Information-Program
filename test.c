@@ -69,7 +69,7 @@ void sch_initialzer()
 }
     int help_add(int from, int passenger){   
     which_ele[passenger] = ind++;
-    e[which_ele[passenger]].requesting[passenger] = from;
+    elevat[which_ele[passenger]].requesting[passenger] = from;
     return which_ele[passenger];
 }
     
@@ -84,7 +84,7 @@ int add_start(int from, int passenger) {
 
 
 int help_next(int elev){
-    ELEV *_e = &e[elev];
+    ele *_e = &elevat[elev];
     int n = 0;
     while (_e->requesting[_e->next_one] == -1) {
             _e->next_one++;
@@ -97,13 +97,13 @@ int help_next(int elev){
 }
 
 int get_next_request(int elev) {
-    ELEV *_e = &e[elev];
+    ele *_e = &elevat[elev];
     if (_e->next_one >= PASSENGERS)
         _e->next_one = 0;
     help_next(elev);
 }
 void remove_request(int passenger) {
-    e[which_ele[passenger]].requesting[passenger] = -1;
+    elevat[which_ele[passenger]].requesting[passenger] = -1;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -204,7 +204,7 @@ int passenger_is_waiting_at_floor(int elevator, int floor)  {
             temp->c = n;
             
             //if passenger is at the floor
-            while (checker(elevator, at_floor)==1 && temp->c == n && temp->num_req > 0)
+            while (passenger_is_waiting_at_floor(elevator, at_floor)==1 && temp->c == n && temp->num_req > 0)
                 pthread_cond_wait(&temp->pentered, &temp->l);
         }
 
