@@ -31,12 +31,12 @@ typedef struct {
 
     int amount_inside[PASSENGERS];
     int pas_inside;
-} ELEV;
+} ele;
 
 int which_ele[PASSENGERS];
 int ind = 0;
 
-ELEV e[ELEVATORS];
+elee[ELEVATORS];
 
 
 // The function scheduler init will change according to this
@@ -85,7 +85,7 @@ int add_start(int from, int passenger) {
 
 
 int help_next(int elev){
-    ELEV *_e = &e[elev];
+    ele*_e = &e[elev];
     int n = 0;
     while (_e->requesting[_e->next_one] == -1) {
             _e->next_one++;
@@ -98,7 +98,7 @@ int help_next(int elev){
 }
 
 int get_next_request(int elev) {
-    ELEV *_e = &e[elev];
+    ele*_e = &e[elev];
     if (_e->next_one >= PASSENGERS)
         _e->next_one = 0;
     help_next(elev);
@@ -121,7 +121,7 @@ void passenger_request(int passenger, int from_floor, int to_floor,
         void (*enter)(int, int), 
         void(*exit)(int, int))
 {	
-    int elev = add_start(from_floor, passenger);
+    int ele= add_start(from_floor, passenger);
     e[elev].num_requests++;
     int waiting = 1;
     
@@ -131,7 +131,7 @@ void passenger_request(int passenger, int from_floor, int to_floor,
 		//then allow the passenger inside of the elevator and increment of passangers 
     while(waiting) {
         pthread_mutex_l(&e[elev].l);
-        ELEV *_e = &e[elev];
+        ele*_e = &e[elev];
         if(_e->from_floor == from_floor && _e->type == ele_open && _e->amount==0) {
             enter(passenger, elev);
             _e->pas_inside = passenger;
@@ -156,7 +156,7 @@ void passenger_request(int passenger, int from_floor, int to_floor,
     while(riding) {
         pthread_mutex_l(&e[elev].l);
         
-        ELEV *_e = &e[elev];
+        ele*_e = &e[elev];
             
         if(_e->from_floor == to_floor && _e->type == ele_open) {
           
@@ -184,7 +184,7 @@ int passenger_is_waiting_at_floor(int elevator, int floor)  {
 void elevator_ready(int elevator, int at_floor, void(*move_direction)(int, int), void(*door_open)(int), void(*door_close)(int)) {
   
     if(e[elevator].num_requests==0) return;
-    ELEV *el = &e[elevator];
+    ele*el = &e[elevator];
     pthread_mutex_l(&el->l);
     if(el->type == elevator_came) {
         door_open(elevator);
