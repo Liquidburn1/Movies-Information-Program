@@ -150,63 +150,56 @@ void sch_initialzer()
 
     //each passenger will go as the elevator list
     void passenger_request(int passenger, int from_floor, int to_floor, void (*enter)(int, int), void(*exit)(int, int))
-    {
-
-        int temp=assignmenting(from_floor,passenger);
-        elevat[temp].num_req=elevat[temp].num_req+1;
-        
-        //if the passenger is at the floor it should waut for the passenger to get in
-        int idle=1;
-        while(idle==1)
-        {
-            pthread_mutex_lock(&elevat[temp].l);
-            ele *tem = &elevat[temp];
-            if(tem->this_floor==0)
-            {
-               tem->c=y; 
-                pthread_cond_signal(&tem->pentered);
-            }
-
-
-            if(tem->type==ele_open && tem->amount==0 && tem->this_floor==from_floor)
-            {
-                tem->pas_inside=passenger;
-                tem->floor_to_go[tem->pas_inside]=to_floor;
-                tem->amount=tem->amount+1;
-                enter(passenger,temp);
-                idle=-1;
-                tem->c=y;
-                pthread_cond_signal(&tem->pentered);
-            }
-            pthread_mutex_unlock(&elevat[temp].l);
-
-
-        } 
-
-        //when the passenger is riding and going to the desired floor
-        int inside_it=1;
-
-        while(inside_it==1)
-        {
-            pthread_mutex_lock(&elevat[temp].l);
-            ele *tem=&elevat[temp];
-            //if its at the desired floor 
-            if(tem->type==ele_open && tem->this_floor==to_floor)
-            {
-            exit(passenger,temp);
-            tem->amount=tem->amount-1;
-            tem->num_req=tem->num_req-1;
-            tem->pas_inside=-1;
-            remove_it(passenger);
-            inside_it=-1;
-            }
-        
-        pthread_mutex_unlock(&elevat[temp].l);
-
-        tem->c2=y1;
-        pthread_cond_signal(&elevat[temp].pexit);
+    {	
+    int elev = add_start(from_floor, passenger);
+    e[elev].num_requests++;
+    int waiting = 1;
+    //if the elevator is in the current floor as the passenger  
+		//&&  if the elevator door opens for the passenger for pickup 
+		//&& if elevator is empty
+		//then allow the passenger inside of the elevator and increment of passangers 
+    while(waiting) {
+        pthread_mutex_l(&e[elev].l);
+        ELEV *_e = &e[elev];
+        if(_e->from_floor == from_floor && _e->type == ele_open && _e->amount==0) {
+            enter(passenger, elev);
+            _e->pas_inside = passenger;
+            _e->amount_inside[_e->pas_inside] = to_floor;
+            _e->amount++;
+            waiting=0;
+            _e->c = yes;
+            pthread_cond_signal(&_e->pentered);
         }
+        
+        if (_e->from_floor == 0) {
+            _e->c = yes;
+            pthread_cond_signal(&_e->pentered);
+        }
+        pthread_mutex_unl(&e[elev].l);
 
+        
+    }
+    int riding = 1;
+ 
+            
+    while(riding) {
+        pthread_mutex_l(&e[elev].l);
+        
+        ELEV *_e = &e[elev];
+            
+        if(_e->from_floor == to_floor && _e->type == ele_open) {
+          
+            exit(passenger, elev);
+            _e->amount--;
+            _e->pas_inside = -1;
+            _e->num_requests--;
+            remove_request(passenger);
+            riding=0;
+        }
+        pthread_mutex_unl(&e[elev].l);
+        _e->c2 = yes2;
+        pthread_cond_signal(&e[elev].pexit);
+    }
 
     }
 
