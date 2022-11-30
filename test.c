@@ -5,6 +5,9 @@
 #include<pthread.h>
 
 
+//Sources for help: 
+        //https://github.com/ecurri3/CS361HW5/blob/master/hw5.c (This is a different HW and doesnt work the same as ours but it helped make this code)
+        //http://laser.cs.umass.edu/verification-examples/elevator_con/elevator_con_1.html I also used this for the logic
 
 //struct
 //this is a structure for the elevators which holds the floor,direction,amount of people and a bunch more 
@@ -65,6 +68,7 @@ ele elevat[ELEVATORS]; //this will crreate the array of struct
 //     pthread_mutex_lock(&elevator_lock);
 // }
 
+//This is different than the lab because we have to initialize the elevator array 
     void scheduler_init()
     {
        
@@ -73,6 +77,9 @@ ele elevat[ELEVATORS]; //this will crreate the array of struct
     //initializing the structure of the elevators
     while(i<=ELEVATORS-1)
     {
+        pthread_mutex_init(&elevat[i].l,0);
+        pthread_cond_init(&elevat[i].pentered, 0);
+        pthread_cond_init(&elevat[i].pexit, 0);
         elevat[i].this_floor=0;		
         elevat[i].direction=-1;
         elevat[i].pas_inside = -1;
@@ -82,9 +89,6 @@ ele elevat[ELEVATORS]; //this will crreate the array of struct
         elevat[i].next_one = 0;
         elevat[i].num_req = 0;
         elevat[i].amount=0;
-        pthread_mutex_init(&elevat[i].l,0);
-        pthread_cond_init(&elevat[i].pentered, 0);
-        pthread_cond_init(&elevat[i].pexit, 0);
         int k=0;
         while(k<=PASSENGERS-1)
         {
@@ -125,6 +129,64 @@ ele elevat[ELEVATORS]; //this will crreate the array of struct
     }
 
 
+//LAB CODE to understand
+//     void passenger_request(int passenger, int from_floor, int to_floor, void (*enter)(int, int), void(*exit)(int, int)) {
+//     pthread_mutex_lock(&passenger_lock);
+
+//     // *************
+//     // ENTER THE LIFT
+//     // *************
+//     pthread_mutex_lock(&elevator_lock);
+
+//     // TODO 1b: Submit request to elevator by setting 'wait_at'.
+//     // 'wait_at' is used to store the next floor at which the elevator should stop
+//     // at. Replace 0 below with the correct value for this request.
+//     wait_at = from_floor;
+
+//     // TODO 1c:
+//     // After setting the 'wait_at' variable, we wait for the elevator to arrive at the
+//     // floor and inform us once it's ready.
+//     //
+//     // The passenger thread should wait for the 'is_elevator_ready' variable to be set
+//     // and the elevator sets the variable and signals this thread
+//     //
+//     // Fill in the while loop below to wait for the condition to be met.
+//     while(is_elevator_ready==0) {
+//         pthread_cond_wait(&elevator_signal, &elevator_lock);
+//     }
+//     is_elevator_ready = 0;
+
+//     // enter the lift
+//     enter(passenger, 0);
+
+//     // TODO 1e:
+//     // We've now entered the elevator. It's now the passenger's turn to notify the elevator
+//     // that they have entered. As in the previous TODOs, use pthread_cond_signal to notify
+//     // the elevator thread that the passenger is ready.
+//     /* FILL IN HERE */
+//     is_passenger_ready=1;
+//     pthread_cond_signal(&passenger_signal);
+//     wait_at=to_floor;
+  
+
+
+//     // *************
+//     // EXIT THE LIFT
+//     // *************
+//     // TODO 2: Use what you've learned in the previous TODOs to replace the below busy poll
+//     // with the condition algorithm.
+//     while(is_elevator_ready==0) {
+//         pthread_cond_wait(&elevator_signal,&elevator_lock);
+       
+//     }
+//     	is_elevator_ready=0;
+//     	exit(passenger,0);
+//     	is_passenger_ready=1;
+//     	pthread_cond_signal(&passenger_signal);
+// 	pthread_mutex_unlock(&elevator_lock);
+	
+//     pthread_mutex_unlock(&passenger_lock);
+// }
 
 
     //each passenger will go as the elevator list
@@ -200,6 +262,61 @@ ele elevat[ELEVATORS]; //this will crreate the array of struct
 
     }
 
+
+
+
+    // void elevator_ready(int elevator, int at_floor, void(*move_direction)(int, int), void(*door_open)(int), void(*door_close)(int)) {
+    // if(elevator == 0) {
+    //     if(at_floor == FLOORS-1)
+    //         elevator_direction = -1;
+    //     if(at_floor == 0)  
+    //         elevator_direction = 1;
+
+        
+
+    //     if (wait_at == at_floor) {
+    //         // There is a passenger waiting at this floor.
+    //         // We set wait_at back to its default value so it can be used later.
+    //         door_open(elevator);
+    //         wait_at = 0;
+	    
+    //         // TODO 1d:
+    //         // The passenger thread waiting for the elevator will be waiting for the elevator
+    //         // to be ready so that it can step into the elevator. The door is open now so the elevator
+    //         // is ready! Time to signal the other thread.
+    //         //
+    //         // Signal the passenger thread using 'is_elevator_ready', 'elevator_signal' and pthread_cond_signal
+    //         /* FILL IN CODE HERE */
+	//     is_elevator_ready=1;
+	//     pthread_mutex_unlock(&elevator_lock);
+	//     pthread_cond_signal(&elevator_signal);
+    //         // TODO 1f:
+    //         // It's now the passengers turn to notify the elevator thread once it's entered.
+    //         // Wait for the 'is_passenger_ready' condition to be ready. Use the 'passenger_signal'
+    //         // variable along with pthread_cond_wait to wait.
+    //         while(is_passenger_ready==0) {
+    //            /* WAIT FOR CONDITION HERE */
+    //            pthread_cond_wait(&passenger_signal,&elevator_lock);
+    //         }
+    //         is_passenger_ready = 0;
+    //        door_close(elevator);
+    //     } else {
+    //         // There's no passenger waiting at this floor
+    //         // Let's release the lock which will allow other passenger threads to run
+    //         // and check the state of the elevator
+    //         pthread_mutex_unlock(&elevator_lock);
+    //         usleep(1);
+    //         pthread_mutex_lock(&elevator_lock);
+    //     }
+
+        
+          
+    //     move_direction(elevator,elevator_direction);
+    //     elevator_floor = at_floor+elevator_direction;
+    // }
+
+
+    // This will check if the elevator is ready or not. This will make the code urn much faster due to us doing much more than the one in lab.
     void elevator_ready(int elevator, int at_floor, void(*move_direction)(int, int), void(*door_open)(int), void(*door_close)(int))
     {
         if(elevat[elevator].num_req==0)
@@ -244,7 +361,6 @@ ele elevat[ELEVATORS]; //this will crreate the array of struct
             temp->type=ele_open;
             door_open(elevator);
         }
-        
         else
         {
             int direc = temp->direction;
