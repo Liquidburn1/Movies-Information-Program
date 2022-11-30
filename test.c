@@ -107,12 +107,18 @@ void remove_request(int passenger) {
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-void scheduler_init() {
-    
-    sch_initialzer();
-    for (int j = 0; j < PASSENGERS; j++)
-        which_ele[j] = -1;
-}
+void scheduler_init()
+    {
+        sch_initialzer();
+        int i=0;
+        while(i<PASSENGERS)
+        {
+
+            which_ele[i]=-1;
+            i=i+1;
+        }
+
+    }
 
 int passenger_is_waiting_at_floor(int elevator, int floor)  {
     for(int i = 0; i < PASSENGERS; i++) {
