@@ -4,12 +4,13 @@
 #include<stdio.h>
 #include<pthread.h>
 
-//struct
 
+
+//struct
+//this is a structure for the elevators which holds the floor,direction,amount of people and a bunch more 
 typedef struct
 {
-
-   
+    
     
     
     int this_floor; //current floor
@@ -18,6 +19,7 @@ typedef struct
     //elevator has come, elevator is open and it is closed
     enum{elevator_came=1,ele_open=2,ele_close=3} type; //what is happeing to the elevator 
     pthread_mutex_t l; //this will be the lock 
+     enum{y=1,n=0} c; // condion
     pthread_cond_t pentered; //passenger entered
     pthread_cond_t pexit; //passenger exited
     int requesting[PASSENGERS]; //passengers requesting
@@ -25,12 +27,12 @@ typedef struct
     int floor_to_go[PASSENGERS]; //number of passengers inside the elevator
     int pas_inside; //The passenger which is inside right now
     int num_req; //number if requests from the passengers
-    enum{y=1,n=0} c;
-    enum{y1=1,n1=0} c2;
+    enum{y1=1,n1=0} c2; //had to use y1 because it woulnt let me use y 
+
 
 } ele;
 
-int which_ele[PASSENGERS];
+int which_ele[PASSENGERS]; //this is an array which holds which elevator the pasenger is using
 int ind=0; //index
 
 ele elevat[ELEVATORS]; //this will crreate the array of struct 
@@ -43,8 +45,6 @@ ele elevat[ELEVATORS]; //this will crreate the array of struct
     {
         ele *temp = &elevat[elevator_on];
         if(temp->next_one>=PASSENGERS){temp->next_one=0;}
-        
-        
         ele *tem = &elevat[elevator_on];
         int i=0;
         while(tem->requesting[tem->next_one]==-1)
@@ -53,14 +53,17 @@ ele elevat[ELEVATORS]; //this will crreate the array of struct
             if(tem->next_one>=PASSENGERS){tem->next_one=0;}
             if(i+1>PASSENGERS){return 0;}
 
-
-
         }
        
         return temp->requesting[temp->next_one++];
-
-
     }
+/////////////METHOD 3//////////////
+    
+// void scheduler_init() {
+//     pthread_mutex_init(&passenger_lock,0);
+//     pthread_mutex_init(&elevator_lock,0);
+//     pthread_mutex_lock(&elevator_lock);
+// }
 
     void scheduler_init()
     {
@@ -260,16 +263,20 @@ ele elevat[ELEVATORS]; //this will crreate the array of struct
             }
 
             else if(temp->num_req>0)
-            {
+            {   
+                
                 int to_floor = get_next_req(elevator);
                 temp->direction=to_floor-at_floor;
 
             }
 
-
-            if(at_floor+temp->direction>-1 && at_floor+temp->direction<FLOORS)
+            //this is checking if the elevator has to go up or down and then if the next passenger to pick up will be on the floor under the elvator
+            // if it is then we go down this will make the program run faster than method 2 and 1
+            if(at_floor+temp->direction>=0 && at_floor+temp->direction<FLOORS)
             {move_direction(elevator,temp->direction);}
             temp->this_floor=at_floor+temp->direction;
+
+            
             if(temp->direction != 1 && temp->direction !=-1)
             {
                temp->direction = direc;
