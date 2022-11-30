@@ -133,16 +133,11 @@ void sch_initialzer()
     //this function will check if there is a passenger on the floor or not returns -1 or 1
     int checker(int floor,int el)
     {
-        int i =0;
-        while(i<PASSENGERS)
-        {
-            if(elevat[el].requesting[i]==floor)
-            {
-                return 1;
-            }
-            i=i+1;
-        }
-        return -1;
+        for(int i = 0; i < PASSENGERS; i++) {
+        if (elevat[elevator].requesting[i] == floor)
+            return 1;
+    }
+    return 0;
     }
 
 
