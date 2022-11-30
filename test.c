@@ -121,7 +121,7 @@ void passenger_request(int passenger, int from_floor, int to_floor,
         void (*enter)(int, int), 
         void(*exit)(int, int))
 {	
-    int ele= add_start(from_floor, passenger);
+    int ele = add_start(from_floor, passenger);
     e[elev].num_requests++;
     int waiting = 1;
     
